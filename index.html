@@ -2,7 +2,7 @@
 <html>
 
 <head>
-	<title>쓰레기통 지도 </title>
+	<title>쓰레기통 지도 (수학 공식 연동형)</title>
 	<link rel="icon" href="https://i.ibb.co/ZzS1pLr0/logo.png?v=1" type="image/png">
 
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -105,14 +105,6 @@
 		color: #2980b9;
 		margin: 5px 0;
 	}
-
-	/* GPS 내 위치 마커 커스텀 스타일 */
-	.gps-location-marker {
-		background: #3498db;
-		border: 3px solid white;
-		border-radius: 50%;
-		box-shadow: 0 0 10px rgba(0,0,0,0.5);
-	}
 	</style>
 </head>
 
@@ -133,10 +125,6 @@
 
 		<button id="circleBtn" onclick="toggleCircleMode()" style="position: absolute; top: 190px; left: 55px; z-index: 1000; padding: 10px 15px; font-weight: bold; background: #FFFFFF; color: black; border: 2px solid gray; border-radius: 5px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); cursor: pointer;">
 			반경 원 그리기
-		</button>
-
-		<button id="gpsBtn" onclick="moveToGpsLocation()" style="position: absolute; top: 250px; left: 55px; z-index: 1000; padding: 10px 15px; font-weight: bold; background: #3498db; color: white; border: 2px solid #2980b9; border-radius: 5px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); cursor: pointer;">
-			내 위치 찾기 (GPS)
 		</button>
 
 		<div class="distance-setting-box" id="settingBox">
@@ -169,12 +157,9 @@
 		var distanceTooltip = null;
 		
 		var circlesArray = [];
+		
+		// [핵심 변경] 각 마커마다 생성된 고유의 선(line) 객체를 함께 관리하기 위한 배열 구조 유지
 		var mathLinesArray = [];
-
-		// GPS 내 위치용 변수
-		var userLocationMarker = null;
-		var userLocationCircle = null;
-		var userLatLng = null;
 
 		var ssangmunGeoData = {
 			"type": "FeatureCollection",
@@ -185,7 +170,7 @@
 					"geometry": {
 						"type": "Polygon",
 						"coordinates": [[
-							[127.016929,37.6622982],[127.0175004,37.6615675],[127.0170378,37.6609543],[127.01723,37.6600755],[127.0189504,37.658989],[127.0180589,37.6584003],[127.0182697,37.6580778],[127.0188355,37.6579288],[127.018762,37.6572339],[127.0197128,37.6562927],[127.0197128,37.6562927],[127.0198769,37.6555704],[127.0204971,37.6548403],[127.0205086,37.6542447],[127.0206893,37.6540536],[127.0212737,37.6541778],[127.0216334,37.6543792],[127.0220761,37.6543436],[127.0229346,37.6544176],[127.0238247,37.6542748],[127.0249296,37.6541795],[127.0254686,37.6541778],[127.0259354,37.6538807],[127.0271186,37.6539717],[127.0278055,37.6534097],[127.0281042,37.6532764],[127.0282651,37.6519196],[127.0286523,37.6508089],[127.0251297,37.6466149],[127.0247177,37.6473956],[127.0227805,37.6477695],[127.0220298,37.6482787],[127.0212725,37.6489475],[127.0205177,37.6490843],[127.0180016,37.6485713],[127.0157753,37.6489643],[127.0147876,34.6496036],[127.0137789,37.6492894],[127.0126354,37.6519595],[127.0126636,37.6536039],[127.0135505,37.6573877],[127.0139459,37.6593283],[127.0143699,37.6602362],[127.0146703,37.661922],[127.0153216,37.6615436],[127.0162544,37.6614004],[127.0169225,37.6622909]	
+							[127.016929,37.6622982],[127.0175004,37.6615675],[127.0170378,37.6609543],[127.01723,37.6600755],[127.0189504,37.658989],[127.0180589,37.6584003],[127.0182697,37.6580778],[127.0188355,37.6579288],[127.018762,37.6572339],[127.0197128,37.6562927],[127.0197128,37.6562927],[127.0198769,37.6555704],[127.0204971,37.6548403],[127.0205086,37.6542447],[127.0206893,37.6540536],[127.0212737,37.6541778],[127.0216334,37.6543792],[127.0220761,37.6543436],[127.0229346,37.6544176],[127.0238247,37.6542748],[127.0249296,37.6541795],[127.0254686,37.6541778],[127.0259354,37.6538807],[127.0271186,37.6539717],[127.0278055,37.6534097],[127.0281042,37.6532764],[127.0282651,37.6519196],[127.0286523,37.6508089],[127.0251297,37.6466149],[127.0247177,37.6473956],[127.0227805,37.6477695],[127.0220298,37.6482787],[127.0212725,37.6489475],[127.0205177,37.6490843],[127.0180016,37.6485713],[127.0157753,37.6489643],[127.0147876,37.6496036],[127.0137789,37.6492894],[127.0126354,37.6519595],[127.0126636,37.6536039],[127.0135505,37.6573877],[127.0139459,37.6593283],[127.0143699,37.6602362],[127.0146703,37.661922],[127.0153216,37.6615436],[127.0162544,37.6614004],[127.0169225,37.6622909]	
 						]]
 					}
 				},
@@ -215,7 +200,7 @@
 					"geometry": {
 						"type": "Polygon",
 						"coordinates": [[
-							[127.0258377,37.6567314],[127.0257807,37.6558968],[127.025476,37.6555736],[127.0253002,37.6542728],[127.0258416,37.6539344],[127.0266678,37.6540247],[127.0273659,37.6539457],[127.0279215,37.6533592],[127.0282732,37.6521258],[127.0286965,37.6507924],[127.0332743,37.6511572],[127.0332327,37.6517335],[127.0333886,37.6521533],[127.0330246,37.6524497],[127.0329311,37.6526802],[127.0334411,37.6534002],[127.0335506,37.6540258],[127.0340378,37.6539765],[127.0342665,37.6548162],[127.0342259,37.6551297],[127.0344755,37.6552449],[127.0345587,37.6555907],[127.0343602,37.6567398],[127.0341257,37.6567274],[127.0330472,37.656418],[127.0329221,37.6580515],[127.034338,37.6581528],[127.0341521,37.6598399],[127.0338082,37.6599884],[127.0335894,37.6602731],[127.0334331,37.6602731],[127.0321063,37.6595693],[127.0309105,37.6595858],[127.0299606,37.6596761],[127.0292431,37.6594703],[127.0276201,37.6586486],[127.0273498,37.6585334],[127.0274508,37.6582148],[127.0274716,37.6578937],[127.0273468,37.6573751],[127.0270764,37.657054],[127.0264733,37.6568153],[127.0262445,37.6566671],[127.0260054,37.6568482],[127.025839,37.6567247]
+							[127.0258377,37.6567314],[127.0257807,37.6558968],[127.025476,37.6555736],[127.0253002,37.6542728],[127.0258416,37.6539344],[127.0266678,37.6540247],[127.0273659,37.6539457],[127.0279215,37.6533592],[127.0282732,37.6521258],[127.0286965,37.6507924],[127.0332743,37.6511572],[127.0332327,37.6517335],[127.0333886,37.6521533],[127.0330246,37.6524497],[127.0329311,37.6526802],[127.0334411,37.6534002],[127.0338506,37.6540258],[127.0340378,37.6539765],[127.0342665,37.6548162],[127.0342259,37.6551297],[127.0344755,37.6552449],[127.0345587,37.6555907],[127.0343602,37.6567398],[127.0341257,37.6567274],[127.0330472,37.656418],[127.0329221,37.6580515],[127.034338,37.6581528],[127.0341521,37.6598399],[127.0338082,37.6599884],[127.0335894,37.6602731],[127.0334331,37.6602731],[127.0321063,37.6595693],[127.0309105,37.6595858],[127.0299606,37.6596761],[127.0292431,37.6594703],[127.0276201,37.6586486],[127.0273498,37.6585334],[127.0274508,37.6582148],[127.0274716,37.6578937],[127.0273468,37.6573751],[127.0270764,37.657054],[127.0264733,37.6568153],[127.0262445,37.6566671],[127.0260054,37.6568482],[127.025839,37.6567247]
 						]]
 					}
 				}
@@ -234,61 +219,6 @@
 		var isOriginalTrashMode = false;
 		var originalMarkersArray = [];
 		var originalCirclesArray = [];
-
-		// --- GPS 위치 추적 시스템 시작 ---
-		// 사용자의 실제 위치와 오차 범위를 지도에 실시간으로 표시 및 갱신해주는 함수
-		function onLocationFound(e) {
-			userLatLng = e.latlng;
-			var radius = e.accuracy / 2; // 정확도 반경 계산
-
-			// 처음 위치를 찾은 경우 마커 및 정확도 원 생성
-			if (!userLocationMarker) {
-				// 푸른색 동그라미 스타일 마커 지정
-				userLocationMarker = L.divIcon({
-					className: 'gps-location-marker',
-					iconSize: [16, 16],
-					iconAnchor: [8, 8]
-				});
-				userLocationMarker = L.marker(e.latlng, { icon: userLocationMarker }).addTo(map);
-				userLocationMarker.bindPopup("<b>현재 내 GPS 위치</b>");
-
-				userLocationCircle = L.circle(e.latlng, radius, {
-					color: '#3498db',
-					fillColor: '#3498db',
-					fillOpacity: 0.15,
-					weight: 1,
-					interactive: false
-				}).addTo(map);
-			} else {
-				// 이미 마커가 있으면 좌표 및 반경만 실시간 업데이트
-				userLocationMarker.setLatLng(e.latlng);
-				userLocationCircle.setLatLng(e.latlng);
-				userLocationCircle.setRadius(radius);
-			}
-		}
-
-		function onLocationError(e) {
-			alert("GPS 위치를 가져올 수 없습니다: " + e.message + "\n브라우저나 기기의 위치 권한 설정을 확인해 주세요.");
-		}
-
-		// Leaflet 자체 내장 로케이션 트래킹 기능 작동 (실시간 위치 추적 유지)
-		map.on('locationfound', onLocationFound);
-		map.on('locationerror', onLocationError);
-
-		// 웹페이지 로드 시 자동으로 유저 위치 탐색 시작 (화면 강제 이동 안함)
-		map.locate({ setView: false, watch: true, enableHighAccuracy: true });
-
-		// [내 위치 찾기] 버튼을 누르면 현재 GPS 위치로 지도를 부드럽게 이동시키는 함수
-		function moveToGpsLocation() {
-			if (userLatLng) {
-				map.setView(userLatLng, 16);
-				if (userLocationMarker) userLocationMarker.openPopup();
-			} else {
-				alert("현재 GPS 위치를 탐색 중입니다. 잠시 후 다시 시도해 주세요.");
-				map.locate({ setView: true, maxZoom: 16, enableHighAccuracy: true });
-			}
-		}
-		// --- GPS 위치 추적 시스템 끝 ---
 
 		function toggleMode() {
 			isSettingMode = !isSettingMode; 
@@ -379,6 +309,7 @@
 			const savedMarkers = localStorage.getItem('trashMarkers');
 			if (savedMarkers) {
 				const locations = JSON.parse(savedMarkers);
+				// 저장된 마커들을 불러올 때는 순차적으로 매칭선을 계속 유지할 수 있도록 처리
 				locations.forEach(function(loc) { createMarker(loc.lat, loc.lng); });
 			}
 		}
@@ -395,6 +326,7 @@
 			var closestTrash = null;
 			var minDistance = Infinity;
 
+			// 1. 기존 고정 데이터에서 가장 가까운 쓰레기통 검사
 			originalTrashData.forEach(function(coord) {
 				var trashLatLng = L.latLng(coord[0], coord[1]);
 				var dist = markerPosition.distanceTo(trashLatLng); 
@@ -404,6 +336,7 @@
 				}
 			});
 
+			// 2. 이미 설치한 은후님 커스텀 쓰레기통(배열) 중에서 가장 가까운 쓰레기통 재검사
 			markersArray.forEach(function(m) {
 				if (m !== newMarker) {
 					var markerLatLng = m.getLatLng();
@@ -417,12 +350,14 @@
 
 			var popupMathContent = "";
 			if (closestTrash) {
+				// [핵심 수정] 이전 선들을 지우지 않고 새 주황색 실선/점선을 지도에 계속 추가함
 				var mathLine = L.polyline([closestTrash, markerPosition], {
 					color: '#e67e22',
 					weight: 3,
 					dashArray: '6, 6'
 				}).addTo(map);
 
+				// 마커와 선의 유기적 관리를 위해 객체쌍 구조로 보관
 				mathLinesArray.push({
 					marker: newMarker,
 					line: mathLine
@@ -450,12 +385,14 @@
 				`;
 			}
 
+			// 삭제 버튼 생성
 			const deleteBtn = document.createElement('button');
 			deleteBtn.innerText = '삭제하기';
 			deleteBtn.style.cssText = 'margin-top:5px; color:red; cursor:pointer; border:1px solid red; background:white; border-radius:3px; padding: 2px 5px; display:block; width:100%;';
 			deleteBtn.onclick = function() {
 				map.removeLayer(newMarker);
 				
+				// [핵심 수정] 해당 마커가 지워질 때 연결되어 있던 주황색 선도 매칭하여 실시간 같이 영구 삭제
 				mathLinesArray = mathLinesArray.filter(function(item) {
 					if (item.marker === newMarker) {
 						map.removeLayer(item.line);
@@ -466,6 +403,7 @@
 
 				markersArray = markersArray.filter(function(m) { return m !== newMarker; });
 				
+				// 기존 위치 (+반경) 모드가 켜져 있다면 반경 원도 실시간으로 다시 렌더링
 				if (isOriginalTrashMode) {
 					toggleOriginalTrash();
 					toggleOriginalTrash();
@@ -482,6 +420,7 @@
 
 			newMarker.openPopup();
 
+			// 기존 위치 (+반경) 모드가 이미 켜진 상태에서 새 마커를 찍으면 그 마커 주변에도 즉시 보라색 반경 원을 누적 생성
 			if (isOriginalTrashMode) {
 				var dValue = parseFloat(document.getElementById('formulaD').value);
 				if (isNaN(dValue) || dValue <= 0) dValue = 100;
@@ -607,8 +546,7 @@
 			}
 		}
 
-		// 버블링 방지 컨트롤 요소에 gps 버튼 배열 추가
-		var controls = ['toggleBtn', 'districtBtn', 'circleBtn', 'originalTrashBtn', 'gpsBtn', 'settingBox'];
+		var controls = ['toggleBtn', 'districtBtn', 'circleBtn', 'originalTrashBtn', 'settingBox'];
 		controls.forEach(function(id) {
 			var el = document.getElementById(id);
 			L.DomEvent.on(el, 'click', L.DomEvent.stopPropagation);
